@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bus Driver Location Update</title>
+</head>
+<body>
+    <h1>Bus Driver Location Update</h1>
+    <form id="locationForm">
+        <label for="busId">Bus ID:</label>
+        <input type="number" id="busId" name="busId" required><br>
+        <button type="button" onclick="startUpdatingLocation()">Start Updating Location</button>
+    </form>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+        var watchId;
+
+        function startUpdatingLocation() {
+            var busId = document.getElementById('busId').value;
+            if (!busId) {
+                alert('Please enter a Bus ID');
+                return;
+            }
+
+            if (navigator.geolocation) {
+                watchId = navigator.geolocation.watchPosition(function(position) {
+                    var lat = position.coords.latitude;
+                    var lng = position.coords.longitude;
+
+                    socket.emit('update_location', { id: busId, lat: lat, lng: lng });
+                }, function(error) {
+                    console.error(error);
+                }, {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0
+                });
+
+                alert('Location updates started.');
+            } else {
+                alert('Geolocation is not supported by this browser.');
+            }
+        }
+    </script>
+</body>
+</html>

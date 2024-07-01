@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bus Tracking System</title>
+</head>
+<body>
+    <h1>Bus Tracking System</h1>
+    <div id="map" style="height: 500px; width: 100%;"></div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        function initMap() {
+            var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 4,
+                center: { lat: 39.8283, lng: -98.5795 }  // Center of the US
+            });
+
+            var buses = {{ buses|tojson }};
+            var markers = {};
+
+            buses.forEach(function(bus) {
+                var marker = new google.maps.Marker({
+                    position: { lat: bus.lat, lng: bus.lng },
+                    map: map,
+                    title: bus.route
+                });
+                markers[bus.id] = marker;
+            });
+
+            socket.on('location_update', function(data) {
+                if (markers[data.id]) {
+                    markers[data.id].setPosition(new google.maps.LatLng(data.lat, data.lng));
+                }
+            });
+        }
+    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCx-V0I0Sc5v66lQe_HVCOVG6l1lV7jCBw&callback=initMap"></script>
+</body>
+</html>
